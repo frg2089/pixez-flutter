@@ -16,7 +16,9 @@
 
 import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 part 'illust_persist.g.dart';
 
@@ -55,11 +57,13 @@ class IllustPersistProvider {
   late Database db;
 
   Future open() async {
-    String databasesPath = (await getDatabasesPath())!;
+    String databasesPath = await databaseFactoryFfi.getDatabasesPath();
     String path = join(databasesPath, 'illustpersist.db');
-    db = await openDatabase(path, version: 1,
-        onCreate: (Database db, int version) async {
-      await db.execute('''
+    db = await databaseFactoryFfi.openDatabase(path,
+        options: OpenDatabaseOptions(
+            version: 1,
+            onCreate: (Database db, int version) async {
+              await db.execute('''
 create table $tableIllustPersist ( 
   $cid integer primary key autoincrement, 
   $cillust_id integer not null,
@@ -68,7 +72,7 @@ create table $tableIllustPersist (
     $ctime integer not null
   )
 ''');
-    });
+            }));
   }
 
   Future<IllustPersist> insert(IllustPersist todo) async {

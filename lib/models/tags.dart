@@ -17,7 +17,9 @@ import 'dart:convert' show json;
 
 import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 part 'tags.g.dart';
 
@@ -100,17 +102,19 @@ class TagsPersistProvider {
   late Database db;
 
   Future open() async {
-    String databasesPath = (await getDatabasesPath())!;
+    String databasesPath = await databaseFactoryFfi.getDatabasesPath();
     String path = join(databasesPath, '${tableTag}.db');
-    db = await openDatabase(path, version: 1,
-        onCreate: (Database db, int version) async {
-      await db.execute('''
+    db = await databaseFactoryFfi.openDatabase(path,
+        options: OpenDatabaseOptions(
+            version: 1,
+            onCreate: (Database db, int version) async {
+              await db.execute('''
 create table $tableTag ( 
   $columnId integer primary key autoincrement, 
   $columnName text not null,
   $columnTranslatedName text not null)
 ''');
-    });
+            }));
   }
 
   Future<TagsPersist> insert(TagsPersist tag) async {

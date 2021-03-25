@@ -15,7 +15,9 @@
  */
 import 'package:json_annotation/json_annotation.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common/sqlite_api.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 part 'ban_illust_id.g.dart';
 
 final String columnId = 'id';
@@ -42,9 +44,10 @@ class BanIllustIdProvider {
   late Database db;
 
   Future open() async {
-    String databasesPath = (await getDatabasesPath())!;
+    String databasesPath = await databaseFactoryFfi.getDatabasesPath();
     String path = join(databasesPath, 'banillustid.db');
-    db = await openDatabase(path, version: 1,
+    db = await databaseFactoryFfi.openDatabase(path,
+        options: OpenDatabaseOptions( version: 1,
         onCreate: (Database db, int version) async {
       await db.execute('''
 create table $tableBanIllustId ( 
@@ -53,7 +56,7 @@ create table $tableBanIllustId (
   $columnName text not null
   )
 ''');
-    });
+    }));
   }
 
   Future<BanIllustIdPersist> insert(BanIllustIdPersist todo) async {
