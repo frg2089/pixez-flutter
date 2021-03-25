@@ -10,6 +10,10 @@ add_executable(${BINARY_NAME} WIN32
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
+  "base64"
+  "CodeGen"
+  "SHA256"
+  "Weiss"
 )
 apply_standard_settings(${BINARY_NAME})
 target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")

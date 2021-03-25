@@ -3,15 +3,19 @@
 
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <flutter/method_channel.h>
+#include <flutter/standard_method_codec.h>
 
 #include <memory>
 
 #include "run_loop.h"
 #include "win32_window.h"
 
+void configMethodChannel(flutter::FlutterEngine *engine);
+
 // A window that does nothing but host a Flutter view.
 class FlutterWindow : public Win32Window {
- public:
+public:
   // Creates a new FlutterWindow driven by the |run_loop|, hosting a
   // Flutter view running |project|.
   explicit FlutterWindow(RunLoop* run_loop,
