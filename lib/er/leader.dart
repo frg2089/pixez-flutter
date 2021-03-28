@@ -25,6 +25,7 @@ import 'package:pixez/models/account.dart';
 import 'package:pixez/network/oauth_client.dart';
 import 'package:pixez/page/hello/android_hello_page.dart';
 import 'package:pixez/page/hello/hello_page.dart';
+import 'package:pixez/page/hello/windows_hello_page.dart';
 import 'package:pixez/page/novel/viewer/novel_viewer.dart';
 import 'package:pixez/page/picture/illust_lighting_page.dart';
 import 'package:pixez/page/search/result_page.dart';
@@ -34,8 +35,11 @@ class Leader {
   static Future<void> pushUntilHome(BuildContext context) async {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-          builder: (context) =>
-              Platform.isIOS ? HelloPage() : AndroidHelloPage()),
+          builder: (context) => Platform.isIOS
+              ? HelloPage()
+              : Platform.isWindows
+                  ? WindowsHelloPage()
+                  : AndroidHelloPage()),
       (route) => route == null,
     );
   }

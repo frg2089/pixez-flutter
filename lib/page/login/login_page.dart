@@ -176,6 +176,12 @@ class _LoginPageState extends State<LoginPage> {
       }
       return;
     }
+    if (Platform.isWindows) {
+      final result = true;
+      // await launch(url);
+      if (result) Leader.pushUntilHome(context);
+      return;
+    }
     if (!userSetting.disableBypassSni) {
       await WeissPlugin.start();
       await WeissPlugin.proxy();
