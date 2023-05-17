@@ -17,6 +17,18 @@ message("")
 message("")
 message("Pixez for Windows Desktop Application (WinRT)")
 
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/../cmake")
+find_package(Dotnet 7.0 REQUIRED)
+if(DOTNET_FOUND)
+  set(NUGET_EXISTS "${NUGET_EXE}")
+  if(EXISTS "${NUGET_EXISTS}")
+    get_filename_component(NUGET_PATH "${NUGET_EXE}" DIRECTORY)
+    list(APPEND CMAKE_PREFIX_PATH "${NUGET_PATH}")
+  endif()
+  get_filename_component(DOTNET_ROOT "${DOTNET_EXE}" DIRECTORY)
+endif()
+
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
 cmake_policy(SET CMP0063 NEW)
