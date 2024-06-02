@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <OutDir Condition=" '$(Configuration)' == 'Release' ">$(MSBuildThisFileDirectory)..\build\windows\x64\runner\Release</OutDir>
+    <NeutralLanguage>zh-Hans</NeutralLanguage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\build\windows\x64\runner\Release\pixez.msix" Link="pixez.msix" LogicalName="msix" />
+  </ItemGroup>
+
+</Project>
