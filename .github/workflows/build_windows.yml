@@ -1,0 +1,143 @@
+name: Build Windows
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    name: Build Windows
+    runs-on: windows-latest
+    env:
+      CERTIFICATE: ${{ secrets.CERTIFICATE }}
+      CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+    steps:
+
+      - name: 签出仓库
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 0
+          ref: master
+          
+      - name: 初始化 Flutter 环境
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          architecture: x64
+          
+      - name: 设置 MSVC
+        uses: TheMrMilchmann/setup-msvc-dev@v3
+        with:
+          arch: x64
+          sdk: 10.0.22000.0
+          toolset: 14.39
+
+      - name: 配置 Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "noreply@github.com"
+
+      - name: 变基到 develop 分支
+        run: git rebase origin/develop
+        
+      - name: 抬升版本号
+        run: |
+          $pubspec = Get-Content pubspec.yaml | ForEach-Object {
+            if ($PSItem.StartsWith('  msix_version: 0.0.0.')) {
+              $arr = $PSItem.Replace('  msix_version: ', [string]::Empty).Split('.') | ForEach-Object {
+                [int]::Parse($PSItem)
+              }
+              $major = $arr[0]
+              $minor = $arr[1]
+              $build = $arr[2]
+              $patch = $arr[3]
+              $patch++;
+              "  msix_version: $major.$minor.$build.$patch"
+            } else {
+              $PSItem
+            }
+          }
+          $pubspec > pubspec.yaml
+          git add pubspec.yaml
+          git commit --amend --no-edit --reset-author -s
+
+      - name: 检查环境
+        run: flutter doctor
+
+      - name: 拉取依赖
+        run: flutter pub get
+
+      - name: 生成代码
+        run: dart run build_runner build
+
+      - name: 构建项目
+        run: flutter build windows
+
+      - name: 打包产物
+        run: Compress-Archive build/windows/x64/runner/Release/* pixez.zip
+
+      - name: 上传产物
+        uses: actions/upload-artifact@v3
+        with:
+          name: binary
+          path: pixez.zip
+
+      - name: 还原证书
+        if: env.CERTIFICATE != ''
+        run: |
+          New-Item -ItemType File -Path base64-certificate.txt -Value $env:CERTIFICATE
+          openssl enc -base64 -d -in base64-certificate.txt -out cert.pfx
+
+      - name: 构建 MSIX
+        if: env.CERTIFICATE != ''
+        run: dart run msix:create -p $env:CERTIFICATE_PASSWORD --build-windows false
+        
+      - name: 上传 MSIX
+        if: env.CERTIFICATE != ''
+        uses: actions/upload-artifact@v3
+        with:
+          name: msix
+          path: build/windows/x64/runner/Release/pixez.msix
+
+      - name: 初始化 DotNet 环境
+        if: env.CERTIFICATE != ''
+        uses: actions/setup-dotnet@v3.2.0
+        with:
+          global-json-file: installer/global.json
+        
+      - name: 构建 MSIX 安装器
+        if: env.CERTIFICATE != ''
+        run: dotnet build -c:Release installer/MsixInstaller.csproj
+          
+      - name: 上传 MSIX 安装器
+        if: env.CERTIFICATE != ''
+        uses: actions/upload-artifact@v3
+        with:
+          name: installer
+          path: build/windows/x64/runner/Release/MsixInstaller.exe
+
+      - name: 生成校验和
+        run: |
+          $checksum = Get-FileHash pixez.zip
+          $checksum = $checksum.Hash
+          Write-Output "### Build Success :rocket:" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|File|SHA256|" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|:-|:-:|" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|pixez.zip|$checksum|" >> $env:GITHUB_STEP_SUMMARY
+          if ([string]::IsNullOrEmpty($env:CERTIFICATE)) {
+            return;
+          }
+
+          $checksum = Get-FileHash build/windows/x64/runner/Release/pixez.msix
+          $checksum = $checksum.Hash
+          Write-Output "|pixez.msix|$checksum|" >> $env:GITHUB_STEP_SUMMARY
+          
+          $checksum = Get-FileHash build/windows/x64/runner/Release/MsixInstaller.exe
+          $checksum = $checksum.Hash
+          Write-Output "|MsixInstaller.exe|$checksum|" >> $env:GITHUB_STEP_SUMMARY
+
+          Write-Output "" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "### MSIX 安装教程" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "![image](https://github.com/Notsfsssf/pixez-flutter/assets/42184238/f1956682-f527-487d-997b-523319cd78d3)" >> $env:GITHUB_STEP_SUMMARY
+
+      - name: 推送修改
+        run: git push origin master -f
