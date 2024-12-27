@@ -8,6 +8,10 @@ jobs:
   build:
     name: Build Windows
     runs-on: windows-latest
+    outputs:
+      binary-artifact: ${{ steps.binary-artifact.outputs.artifact-url }}
+      msix-artifact: ${{ steps.msix-artifact.outputs.artifact-url }}
+      installer-artifact: ${{ steps.installer-artifact.outputs.artifact-url }}
     steps:
       - name: 签出仓库
         uses: actions/checkout@v4
@@ -128,3 +132,29 @@ jobs:
           Write-Output '' >> $env:GITHUB_STEP_SUMMARY
           Write-Output '### MSIX 安装教程' >> $env:GITHUB_STEP_SUMMARY
           Write-Output '![image](https://github.com/Notsfsssf/pixez-flutter/assets/42184238/f1956682-f527-487d-997b-523319cd78d3)' >> $env:GITHUB_STEP_SUMMARY
+
+  publish:
+    name: Publish Release
+    runs-on: windows-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions: 
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: 发布到 Release
+        shell: pwsh
+        run: |-
+          curl '${{ needs.build.outputs.binary-artifact }}' -o windows-x86_64.zip
+          gh release upload ${{ github.ref_name }} windows-x86_64.zip --repo ${{ github.repository }}
+
+          if (![string]::IsNullOrWhiteSpace('${{ needs.build.outputs.msix-artifact }}')) {
+            curl '${{ needs.build.outputs.msix-artifact }}' -o windows-x86_64.msix
+            gh release upload ${{ github.ref_name }} windows-x86_64.msix --repo ${{ github.repository }}
+          }
+
+          if (![string]::IsNullOrWhiteSpace('${{ needs.build.outputs.installer-artifact }}')) {
+            curl '${{ needs.build.outputs.installer-artifact }}' -o windows-x86_64.exe
+            gh release upload ${{ github.ref_name }} windows-x86_64.exe --repo ${{ github.repository }}
+          }
