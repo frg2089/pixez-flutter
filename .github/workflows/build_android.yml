@@ -1,0 +1,72 @@
+name: Build Android
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: 签出仓库
+        uses: actions/checkout@v4
+
+      - name: 初始化 Flutter 环境
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          architecture: x64
+
+      - name: 初始化 Rust 工具链
+        uses: actions-rust-lang/setup-rust-toolchain@v1.10.1
+
+      - name: 还原依赖
+        run: flutter pub get
+
+      - name: 生成代码
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: 构建 apk
+        run: flutter build apk
+
+      - name: 上传产物
+        id: binary-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: build/
+          compression-level: 9
+          retention-days: 1
+
+      # - name: 构建 appbundle
+      #   run: flutter build appbundle
+
+      # - name: 上传产物
+      #   id: binary-artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: binary
+      #     path: build/windows/x64/runner/Release/**/*
+      #     compression-level: 9
+
+      # - name: 生成校验和
+      #   shell: pwsh
+      #   run: |-
+      #     Write-Output '### Build Success :rocket:' >> $env:GITHUB_STEP_SUMMARY
+      #     Write-Output '|File|SHA256|' >> $env:GITHUB_STEP_SUMMARY
+      #     Write-Output '|:-|:-:|' >> $env:GITHUB_STEP_SUMMARY
+      #     Write-Output "|[binary](${{ steps.binary-artifact.outputs.artifact-url }})|${{ steps.binary-artifact.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY
+
+      #     if ('${{ steps.msix-artifact.conclusion }}' -eq 'success') {
+      #       Write-Output "|[msix](${{ steps.msix-artifact.outputs.artifact-url }})|${{ steps.msix-artifact.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY  
+      #     }
+
+      #     if ('${{ steps.installer-artifact.conclusion }}' -eq 'success') {
+      #       Write-Output "|[installer](${{ steps.installer-artifact.outputs.artifact-url }})|${{ steps.installer-artifact.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY  
+      #     }
+
+      #     Write-Output '' >> $env:GITHUB_STEP_SUMMARY
+      #     Write-Output '### MSIX 安装教程' >> $env:GITHUB_STEP_SUMMARY
+      #     Write-Output '![image](https://github.com/Notsfsssf/pixez-flutter/assets/42184238/f1956682-f527-487d-997b-523319cd78d3)' >> $env:GITHUB_STEP_SUMMARY
