@@ -1,4 +1,4 @@
-#include "Clipboard.h"
+#include "clipboard.h"
 
 std::string Clipboard::name = "com.perol.dev/clipboard";
 

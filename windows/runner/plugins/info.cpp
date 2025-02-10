@@ -1,4 +1,4 @@
-#include "Info.h"
+#include "info.h"
 
 std::string Info::name = "com.perol.dev/win32";
 

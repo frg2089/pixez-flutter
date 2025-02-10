@@ -1,4 +1,4 @@
-#include "Paths.h"
+#include "paths.h"
 #include <winrt/windows.storage.h>
 
 std::string Paths::name = "com.perol.dev/single_instance";

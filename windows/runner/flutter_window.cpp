@@ -17,10 +17,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "Paths.h"
-#include "Saver.h"
-#include "Info.h"
-#include "Clipboard.h"
+#include "plugins/clipboard.h"
+#include "plugins/info.h"
+#include "plugins/paths.h"
+#include "plugins/saver.h"
+#include "plugins/single_instance.h"
+#include "plugins/weiss.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject &project)
     : project_(project) {}
@@ -48,11 +50,12 @@ bool FlutterWindow::OnCreate()
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  SingleInstance::Initialize(flutter_controller_->engine());
+  Clipboard::Initialize(flutter_controller_->engine());
+  Info::Initialize(flutter_controller_->engine());
   Paths::Initialize(flutter_controller_->engine());
   Saver::Initialize(flutter_controller_->engine());
-  Info::Initialize(flutter_controller_->engine());
-  Clipboard::Initialize(flutter_controller_->engine());
+  SingleInstance::Initialize(flutter_controller_->engine());
+  Weiss::Initialize(flutter_controller_->engine());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]()
                                                       { this->Show(); });

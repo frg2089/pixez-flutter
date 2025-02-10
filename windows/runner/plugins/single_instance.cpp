@@ -1,7 +1,7 @@
 #include <winrt/base.h>
 
-#include "utils.h"
-#include "SingleInstance.h"
+#include "../utils.h"
+#include "single_instance.h"
 
 LPCTSTR SingleInstance::name = TEXT("pixez");
 LPCTSTR SingleInstance::pipePrefix = TEXT("\\\\.\\pipe\\");
