@@ -13,19 +13,19 @@ function Register-Protocol {
   
   process {
     $Private:ProtocolKey = "HKCU:\Software\Classes\$ProtocolName"
-    if (-not (Test-Path -LiteralPath $ProtocolKey)) {
-      New-Item -LiteralPath $ProtocolKey -Force
+    if (-not (Test-Path -Path $ProtocolKey)) {
+      New-Item -Path $ProtocolKey -Force
     }
 
-    Set-ItemProperty -LiteralPath $ProtocolKey -Name "(Default)" -Value "URL:$ProtocolName Protocol"
-    Set-ItemProperty -LiteralPath $ProtocolKey -Name "URL Protocol" -Value ""
+    Set-ItemProperty -Path $ProtocolKey -Name "(Default)" -Value "URL:$ProtocolName Protocol"
+    Set-ItemProperty -Path $ProtocolKey -Name "URL Protocol" -Value ""
     
     $Private:CommandKey = "$ProtocolKey\shell\open\command"
-    if (-not (Test-Path -LiteralPath $CommandKey)) {
-      New-Item -LiteralPath $CommandKey -Force
+    if (-not (Test-Path -Path $CommandKey)) {
+      New-Item -Path $CommandKey -Force
     }
 
-    Set-ItemProperty -LiteralPath $CommandKey -Name "(Default)" -Value "`"$ExecutableName`" `"%1`""
+    Set-ItemProperty -Path $CommandKey -Name "(Default)" -Value "`"$ExecutableName`" `"%1`""
 
     Write-Output "Registed $ProtocolName Protocol"
   }
@@ -33,7 +33,7 @@ function Register-Protocol {
 
 $Private:PixEz = Join-Path $PSScriptRoot 'pixez.exe'
 
-if (-not (Test-Path -LiteralPath $PixEz)) {
+if (-not (Test-Path -Path $PixEz)) {
   throw 'cannot find PixEz.exe'
 }
 
