@@ -142,6 +142,81 @@ class _PreviewPageState extends State<PreviewPage> {
     super.dispose();
   }
 
+  Widget buildInfo(int index) {
+    return Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          children: [
+            Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+              Flexible(
+                child: Text(
+                  _lightingStore.iStores[index].illusts!.title,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ]),
+            SizedBox(height: 4),
+            Row(children: [
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: PainterAvatar(
+                  id: _lightingStore.iStores[index].illusts!.user.id,
+                  url: _lightingStore
+                      .iStores[index].illusts!.user.profileImageUrls.medium,
+                  onTap: () {
+                    debugPrint(
+                      _lightingStore.iStores[index].illusts!
+                          .toJson()
+                          .toString(),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  _lightingStore.iStores[index].illusts!.user.name,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ]),
+            SizedBox(height: 4),
+            Row(children: [
+              Spacer(),
+              Text('PID:'),
+              Text(_lightingStore.iStores[index].illusts!.id.toString()),
+            ]),
+          ],
+        ));
+  }
+
+  Widget buildCard(int index) {
+    return IconButton(
+      onPressed: () async {
+        await Leader.push(
+          context,
+          GoToLoginPage(illust: _lightingStore.iStores[index].illusts!),
+          icon: Icon(FluentIcons.picture),
+          title: Text(
+            '${I18n.of(context).illust}: ${_lightingStore.iStores[index].illusts}',
+          ),
+        );
+      },
+      style: ButtonStyle(padding: WidgetStatePropertyAll(EdgeInsets.zero)),
+      icon: Card(
+        padding: EdgeInsets.zero,
+        child: Column(children: [
+          PixivImage(
+            _lightingStore.iStores[index].illusts!.imageUrls.squareMedium,
+          ),
+          buildInfo(index),
+        ]),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
@@ -164,30 +239,13 @@ class _PreviewPageState extends State<PreviewPage> {
           child: WaterfallFlow.builder(
             controller: _scrollController,
             shrinkWrap: true,
+            padding: EdgeInsets.all(8),
             gridDelegate: SliverWaterfallFlowDelegateWithFixedCrossAxisCount(
               crossAxisCount: count,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
             ),
-            itemBuilder: (BuildContext context, int index) {
-              return IconButton(
-                onPressed: () {
-                  Leader.push(
-                    context,
-                    GoToLoginPage(
-                      illust: _lightingStore.iStores[index].illusts!,
-                    ),
-                    icon: Icon(FluentIcons.picture),
-                    title: Text(
-                        '${I18n.of(context).illust}: ${_lightingStore.iStores[index].illusts}'),
-                  );
-                },
-                icon: Card(
-                  child: Container(
-                    child: PixivImage(_lightingStore
-                        .iStores[index].illusts!.imageUrls.squareMedium),
-                  ),
-                ),
-              );
-            },
+            itemBuilder: (_, int index) => buildCard(index),
             itemCount: _lightingStore.iStores.length,
           ),
         ),
