@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/dio.dart';
@@ -100,7 +99,8 @@ class FluentLeader {
           await accountProvider.insert(accountPersist);
           await accountStore.fetch();
           BotToast.showText(text: "Login Success");
-          if (Platform.isIOS) pushUntilHome(context);
+          // todo debug报错
+          await pushUntilHome(context);
         } catch (e) {
           LPrinter.d(e);
           BotToast.showText(text: e.toString());
