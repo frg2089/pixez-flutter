@@ -99,7 +99,7 @@ class FluentLeader {
           await accountProvider.insert(accountPersist);
           await accountStore.fetch();
           BotToast.showText(text: "Login Success");
-          // todo debug报错
+          // TODO: debug报错
           await pushUntilHome(context);
         } catch (e) {
           LPrinter.d(e);
