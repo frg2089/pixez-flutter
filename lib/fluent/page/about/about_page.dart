@@ -46,6 +46,8 @@ class _AboutPageState extends State<AboutPage> {
   late bool hasNewVersion;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   List<ProductDetails> products = [];
+  ScrollController _contributorController = ScrollController();
+  double _contributorScrollValue = 0;
 
   @override
   void initState() {
@@ -99,6 +101,7 @@ class _AboutPageState extends State<AboutPage> {
   @override
   void dispose() {
     super.dispose();
+    _contributorController.dispose();
   }
 
   @override
@@ -166,58 +169,60 @@ class _AboutPageState extends State<AboutPage> {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text('Contributors'),
+            child: Row(children: [
+              Text('Contributors'),
+              SizedBox(width: 4),
+              SizedBox(
+                width: 200,
+                child: Slider(
+                  value: _contributorScrollValue,
+                  onChanged: (value) {
+                    double offset = value /
+                        200 *
+                        _contributorController.position.maxScrollExtent;
+                    _contributorController.jumpTo(offset);
+                    setState(() {
+                      _contributorScrollValue = value;
+                    });
+                  },
+                  min: 0,
+                  max: 200,
+                ),
+              ),
+            ]),
           ),
-          Container(
+          SizedBox(
             height: 162,
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: contributors.length,
               scrollDirection: Axis.horizontal,
-              padding: EdgeInsets.only(left: 4.0),
+              controller: _contributorController,
+              padding: EdgeInsets.zero,
               itemBuilder: (context, index) {
                 final data = contributors[index];
-                return Container(
-                  margin: EdgeInsets.only(left: 4.0, top: 4.0, bottom: 4.0),
-                  child: IconButton(
-                    onPressed: () async {
-                      try {
-                        if (data.onPressed == null) return;
-                        await data.onPressed!(context);
-                      } catch (e) {}
-                    },
-                    icon: Container(
+                return IconButton(
+                  onPressed: () async {
+                    try {
+                      if (data.onPressed == null) return;
+                      await data.onPressed!(context);
+                    } catch (e) {}
+                  },
+                  icon: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: SizedBox(
                       width: 80,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            children: [
-                              Container(
-                                height: 8,
-                              ),
-                              CircleAvatar(
-                                backgroundImage: NetworkImage(
-                                  data.avatar,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  data.name,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
+                          CircleAvatar(
+                            backgroundImage: NetworkImage(data.avatar),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              data.content,
-                              textAlign: TextAlign.center,
-                            ),
-                          )
+                          SizedBox(height: 8),
+                          Text(data.name, textAlign: TextAlign.center),
+                          SizedBox(height: 8),
+                          Text(data.content, textAlign: TextAlign.center),
                         ],
                       ),
                     ),
