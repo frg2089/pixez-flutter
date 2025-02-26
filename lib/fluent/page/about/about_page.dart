@@ -31,7 +31,7 @@ import 'package:pixez/page/about/contributors.dart';
 import 'package:pixez/fluent/page/about/thanks_list.dart';
 import 'package:pixez/fluent/page/about/update_page.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class AboutPage extends StatefulWidget {
   final bool? newVersion;
@@ -107,9 +107,7 @@ class _AboutPageState extends State<AboutPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldPage(
-      header: PageHeader(
-        title: Text(I18n.of(context).about),
-      ),
+      header: PageHeader(title: Text(I18n.of(context).about)),
       content: _buildInfo(context),
     );
   }
@@ -117,6 +115,7 @@ class _AboutPageState extends State<AboutPage> {
   Widget _buildInfo(BuildContext context) {
     return Observer(builder: (context) {
       return ListView(
+        padding: EdgeInsets.zero,
         children: <Widget>[
           ListTile(
             leading: CircleAvatar(
@@ -133,15 +132,13 @@ class _AboutPageState extends State<AboutPage> {
                   child: IconButton(
                     onPressed: () async {
                       if (Platform.isAndroid)
-                        await launchUrl(Uri.parse(Constants.isGooglePlay
+                        await launchUrlString(Constants.isGooglePlay
                             ? "https://music.youtube.com/watch?v=qfDhiBUNzwA&feature=share"
-                            : "https://music.apple.com/cn/album/intrauterine-education-single/1515096587"));
+                            : "https://music.apple.com/cn/album/intrauterine-education-single/1515096587");
                     },
-                    icon: Container(
-                      child: Image.asset(
-                        'assets/images/liz.png',
-                        fit: BoxFit.cover,
-                      ),
+                    icon: Image.asset(
+                      'assets/images/liz.png',
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -192,7 +189,7 @@ class _AboutPageState extends State<AboutPage> {
             ]),
           ),
           SizedBox(
-            height: 162,
+            height: 160,
             child: ListView.builder(
               shrinkWrap: true,
               itemCount: contributors.length,
@@ -231,19 +228,19 @@ class _AboutPageState extends State<AboutPage> {
               },
             ),
           ),
-          ListTile(
-            leading: Icon(FluentIcons.rate),
-            title: Text(I18n.of(context).rate_title),
-            subtitle: Text(I18n.of(context).rate_message),
-            onPressed: () async {
-              if (Platform.isIOS) {
-                var url = 'https://apps.apple.com/cn/app/pixez/id1494435126';
+          if (Platform.isIOS)
+            ListTile(
+              leading: Icon(FluentIcons.rate),
+              title: Text(I18n.of(context).rate_title),
+              subtitle: Text(I18n.of(context).rate_message),
+              onPressed: () async {
                 try {
-                  await launchUrl(Uri.parse(url));
+                  await launchUrlString(
+                    'https://apps.apple.com/cn/app/pixez/id1494435126',
+                  );
                 } catch (e) {}
-              }
-            },
-          ),
+              },
+            ),
           if (Platform.isAndroid) ...[
             ListTile(
               leading: Icon(FluentIcons.device_off),
@@ -268,16 +265,16 @@ class _AboutPageState extends State<AboutPage> {
                                     I18n.of(context).go_to_project_address),
                                 onPressed: () async {
                                   try {
-                                    await launchUrl(Uri.parse(
-                                        'https://github.com/Notsfsssf/pixez-flutter'));
+                                    await launchUrlString(
+                                        'https://github.com/Notsfsssf/pixez-flutter');
                                   } catch (e) {}
                                 },
                                 trailing: IconButton(
                                     icon: Icon(FluentIcons.link),
                                     onPressed: () async {
                                       try {
-                                        await launchUrl(Uri.parse(
-                                            'https://github.com/Notsfsssf/pixez-flutter'));
+                                        await launchUrlString(
+                                            'https://github.com/Notsfsssf/pixez-flutter');
                                       } catch (e) {}
                                     }),
                               ),
@@ -310,23 +307,28 @@ class _AboutPageState extends State<AboutPage> {
               },
             )
           ],
-          Visibility(
-            visible: false,
-            child: ListTile(
-                leading: Icon(FluentIcons.home),
-                title: Text('GitHub Page'),
-                subtitle: Text('https://github.com/Notsfsssf'),
-                onPressed: () async {}),
-          ),
           ListTile(
             leading: Icon(FluentIcons.mail),
             title: Text(I18n.of(context).feedback),
             subtitle: Text('PxezFeedBack@outlook.com'),
+            onPressed: () async {
+              try {
+                await launchUrlString('mailto:PxezFeedBack@outlook.com');
+              } catch (e) {}
+            },
           ),
           ListTile(
             leading: Icon(FluentIcons.like),
             title: Text(I18n.of(context).support),
             subtitle: Text(I18n.of(context).support_message),
+            onPressed: () async {
+              // github sponsor
+              try {
+                await launchUrlString(
+                  "https://github.com/Notsfsssf/pixez-flutter/issues",
+                );
+              } catch (e) {}
+            },
           ),
           ListTile(
             leading: Icon(FluentIcons.favorite_star),
@@ -348,6 +350,8 @@ class _AboutPageState extends State<AboutPage> {
             onPressed: () {
               if (Platform.isIOS) {
                 Share.share('https://apps.apple.com/cn/app/pixez/id1494435126');
+              } else {
+                Share.share('https://github.com/Notsfsssf/pixez-flutter');
               }
             },
           ),
@@ -355,6 +359,11 @@ class _AboutPageState extends State<AboutPage> {
             leading: Icon(FontAwesomeIcons.telegram),
             title: Text("Group"),
             subtitle: Text('t.me/PixEzChannel'),
+            onPressed: () async {
+              try {
+                await launchUrlString('https://t.me/PixEzChannel');
+              } catch (e) {}
+            },
           ),
           if (Platform.isAndroid && !Constants.isGooglePlay) ...[
             ListTile(
