@@ -252,23 +252,23 @@ class _SettingPageState extends State<SettingPage> {
           children: <Widget>[
             ListTile(
               leading: Icon(FluentIcons.library),
-              title: Text('Manga'),
+              title: Text(I18n.of(context).manga),
               trailing: Icon(FluentIcons.chevron_right),
               onPressed: () => Leader.push(
                 context,
                 RecomMangaPage(),
-                title: Text('Manga'),
+                title: Text(I18n.of(context).manga),
                 icon: Icon(FluentIcons.library),
               ),
             ),
             ListTile(
               leading: Icon(FluentIcons.plain_text),
-              title: Text('Novel'),
+              title: Text(I18n.of(context).novel),
               trailing: Icon(FluentIcons.chevron_right),
               onPressed: () => Leader.push(
                 context,
                 NovelRail(),
-                title: Text('Novel'),
+                title: Text(I18n.of(context).novel_page),
                 icon: Icon(FluentIcons.plain_text),
               ),
             ),
