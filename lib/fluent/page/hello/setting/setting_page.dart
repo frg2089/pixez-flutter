@@ -251,25 +251,25 @@ class _SettingPageState extends State<SettingPage> {
         Column(
           children: <Widget>[
             ListTile(
-              leading: Icon(FluentIcons.library),
+              leading: Icon(FluentIcons.image_crosshair),
               title: Text(I18n.of(context).manga),
               trailing: Icon(FluentIcons.chevron_right),
               onPressed: () => Leader.push(
                 context,
                 RecomMangaPage(),
                 title: Text(I18n.of(context).manga),
-                icon: Icon(FluentIcons.library),
+                icon: Icon(FluentIcons.image_crosshair),
               ),
             ),
             ListTile(
-              leading: Icon(FluentIcons.plain_text),
+              leading: Icon(FluentIcons.library),
               title: Text(I18n.of(context).novel),
               trailing: Icon(FluentIcons.chevron_right),
               onPressed: () => Leader.push(
                 context,
                 NovelRail(),
                 title: Text(I18n.of(context).novel_page),
-                icon: Icon(FluentIcons.plain_text),
+                icon: Icon(FluentIcons.library),
               ),
             ),
             if (kDebugMode)
