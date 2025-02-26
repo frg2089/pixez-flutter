@@ -43,7 +43,9 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     rotationController = AnimationController(
-        duration: const Duration(milliseconds: 500), vsync: this);
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
     _scrollController.addListener(() async {
       if (_scrollController.hasClients) {
         if (_scrollController.offset >=
@@ -64,71 +66,75 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  initMethod() async {
+  Future<void> initMethod() async {
     await taskPersistProvider.open();
     _refresh();
-    _timer = Timer.periodic(Duration(seconds: 1), (time) {
-      _fetchLocal();
-    });
+    _timer = Timer.periodic(Duration(seconds: 1), (time) => _fetchLocal());
   }
 
-  _fetchLocal() async {
+  Future<void> _fetchLocal() async {
     if (mounted) {
       setState(() {
         if (currentIndex == 1) {
           _list = fetcher.queue
               .where((element) => fetcher.urlPool.contains(element.url))
-              .map((e) => TaskPersist(
+              .map(
+                (e) => TaskPersist(
                   userName: e.illusts?.user.name ?? "",
                   title: e.illusts?.title ?? "",
                   url: e.url ?? "",
                   userId: e.illusts?.user.id ?? 0,
                   illustId: e.illusts?.id ?? 0,
                   fileName: e.fileName ?? "",
-                  status: 1))
+                  status: 1,
+                ),
+              )
               .toList();
         }
       });
     }
   }
 
-  _refresh() async {
+  Future<void> _refresh() async {
     _page = 0;
     _endOfPage = false;
     final results = await taskPersistProvider.getDownloadTask(
-        _page, toTaskStatus(currentIndex), asc);
+      _page,
+      toTaskStatus(currentIndex),
+      asc,
+    );
     if (mounted) {
-      setState(() {
-        _list = results;
-      });
+      setState(() => _list = results);
     }
   }
 
-  _reQueryFilter() async {
+  Future<void> _reQueryFilter() async {
     final results = await taskPersistProvider.getDownloadTask(
-        _page, toTaskStatus(currentIndex), asc);
+      _page,
+      toTaskStatus(currentIndex),
+      asc,
+    );
     if (mounted) {
-      setState(() {
-        _list = results;
-      });
+      setState(() => _list = results);
     }
   }
 
   bool _nextLoading = false;
   bool _endOfPage = false;
 
-  _next() async {
+  Future<void> _next() async {
     if (_nextLoading || _endOfPage) return;
     _nextLoading = true;
     _page++;
     final results = await taskPersistProvider.getDownloadTask(
-        _page, toTaskStatus(currentIndex), asc);
+      _page,
+      toTaskStatus(currentIndex),
+      asc,
+    );
     _endOfPage = results.length < 16;
     _nextLoading = false;
     if (mounted) {
-      setState(() {
-        _list += results;
-      });
+      setState(() => _list += results);
     }
   }
 
@@ -199,31 +205,28 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return ContentDialog(
+      constraints: BoxConstraints(maxWidth: 800, maxHeight: 600),
       title: PageHeader(
+        padding: 0,
         title: Text(I18n.of(context).task_progress),
         commandBar: CommandBar(
           mainAxisAlignment: MainAxisAlignment.end,
           primaryItems: [
             CommandBarButton(
-              onPressed: () {
-                setState(() {
-                  _itemSimple = !_itemSimple;
-                });
-              },
-              icon: (_itemSimple
-                  ? Icon(FluentIcons.picture)
-                  : Icon(FluentIcons.hide3)),
+              tooltip: _itemSimple ? 'Simple' : 'Detail',
+              onPressed: () => setState(() => _itemSimple = !_itemSimple),
+              icon: Icon(_itemSimple ? FluentIcons.picture : FluentIcons.hide3),
             ),
             CommandBarButton(
-              onPressed: () {
-                if (asc)
+              tooltip: asc ? 'ASC' : 'DESC',
+              onPressed: () async {
+                if (asc) {
                   rotationController.forward();
-                else
+                } else {
                   rotationController.reverse();
-                setState(() {
-                  asc = !asc;
-                });
-                _reQueryFilter();
+                }
+                setState(() => asc = !asc);
+                await _reQueryFilter();
               },
               icon: RotationTransition(
                 turns: Tween(begin: 0.0, end: 0.5).animate(rotationController),
@@ -236,49 +239,42 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
               label: Text(I18n.of(context).retry_failed_tasks),
               onPressed: () async {
                 final results = await taskPersistProvider.getAllAccount();
-                results.forEach((element) {
-                  if (element.status == 3) {
-                    _retryJob(element);
-                  }
+                results.forEach((element) async {
+                  if (element.status == 3) await _retryJob(element);
                 });
-                initMethod();
+                await initMethod();
               },
             ),
             CommandBarButton(
               label: Text(I18n.of(context).retry_seed_task),
               onPressed: () async {
                 final results = await taskPersistProvider.getAllAccount();
-                results.forEach((element) {
-                  if (element.status == 0) {
-                    _retryJob(element);
-                  }
+                results.forEach((element) async {
+                  if (element.status == 0) await _retryJob(element);
                 });
-                initMethod();
+                await initMethod();
               },
             ),
             CommandBarButton(
               label: Text(I18n.of(context).clear_completed_tasks),
               onPressed: () async {
                 final results = await taskPersistProvider.getAllAccount();
-                results.forEach((element) {
-                  if (element.status == 2) {
-                    _deleteJob(element);
-                  }
+                results.forEach((element) async {
+                  if (element.status == 2) await _deleteJob(element);
                 });
-                initMethod();
+                await initMethod();
               },
             )
           ],
         ),
       ),
-      content: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTopChip(),
-            Expanded(child: _body()),
-          ],
-        ),
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildTopChip(),
+          SizedBox(height: 8),
+          Expanded(child: _body())
+        ],
       ),
       actions: [
         FilledButton(
@@ -300,38 +296,39 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
         I18n.of(context).complete,
         I18n.of(context).failed,
       ],
-      onChange: (index) {
+      onChange: (index) async {
         _scrollController.jumpTo(0);
-        setState(() {
-          this.currentIndex = index;
-          if (currentIndex == 1) {
-            _list = fetcher.queue
-                .where((element) => fetcher.urlPool.contains(element.url))
-                .map((e) => TaskPersist(
-                    userName: e.illusts?.user.name ?? "",
-                    title: e.illusts?.title ?? "",
-                    url: e.url ?? "",
-                    userId: e.illusts?.user.id ?? 0,
-                    illustId: e.illusts?.id ?? 0,
-                    fileName: e.fileName ?? "",
-                    status: 1))
-                .toList();
-          } else {
-            _refresh();
-          }
-        });
+        setState(() => this.currentIndex = index);
+        if (currentIndex == 1) {
+          _list = fetcher.queue
+              .where((element) => fetcher.urlPool.contains(element.url))
+              .map((e) => TaskPersist(
+                  userName: e.illusts?.user.name ?? "",
+                  title: e.illusts?.title ?? "",
+                  url: e.url ?? "",
+                  userId: e.illusts?.user.id ?? 0,
+                  illustId: e.illusts?.id ?? 0,
+                  fileName: e.fileName ?? "",
+                  status: 1))
+              .toList();
+        } else {
+          await _refresh();
+        }
       },
     );
   }
 
   Widget _body() {
     final trueList = asc ? _list.reversed.toList() : _list;
-    return ListView.builder(
+    return ListView.separated(
+      separatorBuilder: (context, index) => SizedBox(height: 4),
+      padding: EdgeInsets.zero,
       controller: _scrollController,
       itemBuilder: (context, index) {
         if (trueList.isEmpty)
-          return Container(
-            height: MediaQuery.of(context).size.width,
+          return SizedBox(
+            height: 100,
+            width: MediaQuery.of(context).size.width,
             child: Center(
               child: Text(
                 "[ ]",
@@ -352,16 +349,12 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
     JobEntity? jobEntity = fetcher.jobMaps[taskPersist.url];
     if (currentIndex != 0) {
       if ((jobEntity?.status ?? taskPersist.status) != currentIndex)
-        return Visibility(
-          child: Container(
-            height: 0,
-          ),
-          visible: false,
-        );
+        return SizedBox.shrink();
     }
     return PixEzButton(
-      onPressed: () {
-        Leader.push(
+      noPadding: true,
+      onPressed: () async {
+        await Leader.push(
           context,
           IllustLightingPage(id: taskPersist.illustId),
           icon: const Icon(FluentIcons.picture),
@@ -370,147 +363,136 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
       },
       child: Card(
         padding: EdgeInsets.zero,
-        child: Stack(
-          children: [
-            Row(
-              children: [
-                (!_itemSimple)
-                    ? Container(
-                        child: Stack(
-                          children: [
-                            Container(
+        child: Stack(children: [
+          Row(children: [
+            _itemSimple
+                ? SizedBox(width: 8)
+                : SizedBox(
+                    width: 100,
+                    height: 100,
+                    child: Stack(
+                      children: [
+                        SizedBox(
+                          height: 100,
+                          width: 100,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(4.0),
+                            child: PixivImage(
+                              taskPersist.medium ?? taskPersist.url,
+                              fit: BoxFit.cover,
                               height: 100,
                               width: 100,
-                              child: PixivImage(
-                                taskPersist.medium ?? taskPersist.url,
-                                fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        (jobEntity != null && jobEntity.status != 2)
+                            ? SizedBox(
                                 height: 100,
                                 width: 100,
-                              ),
-                            ),
-                            (jobEntity != null && jobEntity.status != 2)
-                                ? Container(
-                                    height: 100,
-                                    width: 100,
-                                    child: Center(
-                                      child: ProgressRing(
-                                        value: ((jobEntity.min ?? 0.0) /
-                                                ((jobEntity.max ?? 0.0)))
-                                            .toDouble(),
-                                        backgroundColor: Colors.grey[200],
-                                      ),
-                                    ),
-                                  )
-                                : Container(
-                                    height: 100,
-                                    width: 100,
+                                child: Center(
+                                  child: ProgressRing(
+                                    value: ((jobEntity.min ?? 0.0) /
+                                            ((jobEntity.max ?? 1))) *
+                                        100,
+                                    backgroundColor: Colors.grey[200],
                                   ),
-                          ],
-                        ),
-                        width: 100,
-                        height: 100,
-                      )
-                    : Container(
-                        width: 8,
-                      ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                                ),
+                              )
+                            : SizedBox(height: 100, width: 100),
+                      ],
+                    ),
+                  ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                taskPersist.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.clip,
-                              ),
-                            ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(
+                            taskPersist.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.clip,
                           ),
-                          if (_itemSimple) ...[
-                            PixEzButton(
-                                onPressed: () {
-                                  _retryJob(taskPersist);
-                                },
-                                child: Icon(FluentIcons.refresh)),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: PixEzButton(
-                                  onPressed: () {
-                                    _deleteJob(taskPersist);
-                                  },
-                                  child: Icon(FluentIcons.delete)),
-                            ),
-                          ],
-                          Padding(
-                            padding: const EdgeInsets.only(right: 16.0),
-                            child: _buildStatusWidget(
-                                jobEntity?.status ?? taskPersist.status),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Text(
-                          taskPersist.userName,
-                          style:
-                              FluentTheme.of(context).typography.body?.copyWith(
-                                    color: FluentTheme.of(context).accentColor,
-                                    fontSize: 12,
-                                  ),
                         ),
                       ),
-                      (!_itemSimple)
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Text(" "),
-                                Row(
-                                  children: [
-                                    PixEzButton(
-                                        onPressed: () {
-                                          _retryJob(taskPersist);
-                                        },
-                                        child: Icon(FluentIcons.refresh)),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: PixEzButton(
-                                          onPressed: () {
-                                            _deleteJob(taskPersist);
-                                          },
-                                          child: Icon(FluentIcons.delete)),
-                                    ),
-                                  ],
-                                )
-                              ],
-                            )
-                          : Container(
-                              height: 10,
-                            ),
+                      if (_itemSimple) ...[
+                        PixEzButton(
+                          onPressed: () async => await _retryJob(taskPersist),
+                          child: Icon(FluentIcons.refresh),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: PixEzButton(
+                            onPressed: () async =>
+                                await _deleteJob(taskPersist),
+                            child: Icon(FluentIcons.delete),
+                          ),
+                        ),
+                      ],
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16.0),
+                        child: _buildStatusWidget(
+                          jobEntity?.status ?? taskPersist.status,
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            (jobEntity != null && jobEntity.status != 2)
-                ? Positioned(
-                    left: 0.0,
-                    right: 0.0,
-                    bottom: 0.0,
-                    child: ProgressBar(
-                      value: ((jobEntity.min ?? 0.0) / ((jobEntity.max ?? 0.0)))
-                          .toDouble(),
-                      backgroundColor: Colors.grey[200],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      taskPersist.userName,
+                      style: FluentTheme.of(context).typography.body?.copyWith(
+                            color: FluentTheme.of(context).accentColor,
+                            fontSize: 12,
+                          ),
                     ),
-                  )
-                : Container(),
-          ],
-        ),
+                  ),
+                  _itemSimple
+                      ? SizedBox(height: 10)
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          mainAxisSize: MainAxisSize.max,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(" "),
+                            Row(children: [
+                              PixEzButton(
+                                onPressed: () async =>
+                                    await _retryJob(taskPersist),
+                                child: Icon(FluentIcons.refresh),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: PixEzButton(
+                                  onPressed: () async =>
+                                      await _deleteJob(taskPersist),
+                                  child: Icon(FluentIcons.delete),
+                                ),
+                              ),
+                            ]),
+                          ],
+                        ),
+                ],
+              ),
+            ),
+          ]),
+          (jobEntity != null && jobEntity.status != 2)
+              ? Positioned(
+                  left: 0.0,
+                  right: 0.0,
+                  bottom: 0.0,
+                  child: ProgressBar(
+                    value:
+                        ((jobEntity.min ?? 0.0) / ((jobEntity.max ?? 1))) * 100,
+                    backgroundColor: Colors.grey[200],
+                  ),
+                )
+              : SizedBox.shrink(),
+        ]),
       ),
     );
   }
@@ -519,9 +501,8 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
     await taskPersistProvider.remove(persist.id!);
     fetcher.jobMaps.remove(persist.url);
     fetcher.queue.removeWhere((element) => element.url == persist.url);
-    setState(() {
-      _list.removeWhere((element) => element.id == persist.id);
-    });
+    _list.removeWhere((element) => element.id == persist.id);
+    setState(() {});
   }
 
   Future _retryJob(TaskPersist persist) async {
@@ -530,6 +511,6 @@ class _JobPageState extends State<JobPage> with SingleTickerProviderStateMixin {
     final taskPersist = persist;
     await taskPersistProvider.insert(taskPersist);
     await fetcher.save(persist.url, taskPersist.toIllusts(), persist.fileName);
-    _refresh();
+    await _refresh();
   }
 }
