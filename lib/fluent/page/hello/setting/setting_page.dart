@@ -152,8 +152,10 @@ class _SettingPageState extends State<SettingPage> {
                         ),
                       ],
                     ),
-                    onPressed: () {
-                      showDialog(
+                    onPressed: () async {
+                      await showDialog(
+                        barrierDismissible: true,
+                        dismissWithEsc: true,
                         context: context,
                         builder: (context) => AccountSelectPage(),
                         useRootNavigator: false,
@@ -164,8 +166,10 @@ class _SettingPageState extends State<SettingPage> {
                 ListTile(
                   leading: Icon(FluentIcons.account_management),
                   title: Text(I18n.of(context).account_message),
-                  onPressed: () {
-                    showDialog(
+                  onPressed: () async {
+                    await showDialog(
+                      barrierDismissible: true,
+                      dismissWithEsc: true,
                       context: context,
                       builder: (context) => AccountEditPage(),
                       useRootNavigator: false,
@@ -219,7 +223,9 @@ class _SettingPageState extends State<SettingPage> {
             ListTile(
               leading: Icon(FluentIcons.blocked),
               title: Text(I18n.of(context).shielding_settings),
-              onPressed: () => showDialog(
+              onPressed: () async => await showDialog(
+                barrierDismissible: true,
+                dismissWithEsc: true,
                 context: context,
                 builder: (context) => ShieldPage(),
                 useRootNavigator: false,
@@ -228,7 +234,9 @@ class _SettingPageState extends State<SettingPage> {
             ListTile(
               leading: Icon(FluentIcons.save),
               title: Text(I18n.of(context).task_progress),
-              onPressed: () => showDialog(
+              onPressed: () async => await showDialog(
+                barrierDismissible: true,
+                dismissWithEsc: true,
                 context: context,
                 builder: (context) => JobPage(),
                 useRootNavigator: false,
@@ -332,6 +340,8 @@ class _SettingPageState extends State<SettingPage> {
     var savedLogFile = await LPrinter.savedLogFile();
     var content = savedLogFile.readAsStringSync();
     final result = await showDialog(
+        barrierDismissible: true,
+        dismissWithEsc: true,
         context: context,
         builder: (context) {
           return ContentDialog(

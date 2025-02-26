@@ -226,8 +226,10 @@ class _FluentHelloPageState extends State<FluentHelloPage> {
                   )
                 ],
               ),
-              onPressed: () {
-                showDialog(
+              onPressed: () async {
+                await showDialog(
+                  barrierDismissible: true,
+                  dismissWithEsc: true,
                   context: context,
                   builder: (context) => AccountSelectPage(),
                   useRootNavigator: false,
