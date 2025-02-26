@@ -433,7 +433,7 @@ class _CommentPageState extends State<CommentPage> {
               });
             },
             icon: Text(
-              widget.isReplay ? "" : "Reply",
+              widget.isReplay ? "" : I18n.of(context).reply,
               style: TextStyle(color: FluentTheme.of(context).accentColor),
             )),
         if (!widget.isReplay)
