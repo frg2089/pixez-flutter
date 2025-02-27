@@ -96,6 +96,9 @@ dev_dependencies:
   custom_lint: ^0.6.4
   riverpod_lint: ^2.3.10
   freezed: ^2.5.2
+  flutter_lints: ^5.0.0
+  husky: ^0.1.7
+  lint_staged: ^0.5.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -137,6 +140,12 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
   generate: true
+
+# lint-staged
+lint_staged:
+  '**/*.dart': 'dart analyze --fatal-infos --fatal-warnings'
+  '!lib/**/*.g.dart': 'dart format --set-exit-if-changed .'
+  '!lib/src/generated/**': 'dart format --set-exit-if-changed .'
 
 msix_config:
   display_name: Pixez
