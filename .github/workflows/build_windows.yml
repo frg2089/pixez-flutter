@@ -82,11 +82,11 @@ jobs:
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
         run: |-
           dart run msix:create `
-            --certificate-path ${{ steps.restore-cert.outputs.CERTIFICATE_PATH }} `
+            --certificate-path '${{ steps.restore-cert.outputs.CERTIFICATE_PATH }}' `
             --certificate-password $env:CERTIFICATE_PASSWORD `
             --build-windows false `
             --version '${{ steps.gitversion.outputs.assemblySemVer }}' `
-            --publisher ${{ steps.restore-cert.outputs.CERTIFICATE_SUBJECT }}
+            --publisher '${{ steps.restore-cert.outputs.CERTIFICATE_SUBJECT }}'
 
       - name: 上传 MSIX
         id: msix-artifact
