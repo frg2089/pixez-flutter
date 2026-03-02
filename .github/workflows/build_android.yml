@@ -1,0 +1,131 @@
+name: Build Android
+
+on:
+  push:
+  pull_request: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: 签出仓库
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: 初始化 GitVersion
+        uses: gittools/actions/gitversion/setup@v4.2.0
+        with:
+          versionSpec: '6.4.x'
+
+      - name: 计算版本 Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v4.2.0
+        with:
+          overrideConfig: |
+            assembly-versioning-scheme=MajorMinorPatchTag
+            assembly-file-versioning-format="{Major}.{Minor}.{Patch}.{BuildMetaData ?? 0}"
+
+      - name: 初始化 Flutter 环境
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          architecture: x64
+
+      - name: 初始化 Rust 工具链
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'microsoft' # 不知道用哪个 就先用微软的
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 还原依赖
+        run: flutter pub get --no-example --enforce-lockfile
+
+      - name: 生成代码
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: 还原密钥存储
+        id: restore-keystore
+        shell: pwsh
+        if: env.STORE != '' && !github.event.pull_request
+        env:
+          STORE: ${{ secrets.STORE }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |-
+          $storeFile = (New-TemporaryFile).FullName + '.jks'
+          [System.IO.File]::WriteAllBytes($storeFile, [System.Convert]::FromBase64String($env:STORE))
+          Write-Output "storeFile=$storeFile" >> ./android/key.properties
+          Write-Output "storePassword=$env:STORE_PASSWORD" >> ./android/key.properties
+          Write-Output "keyAlias=$env:KEY_ALIAS" >> ./android/key.properties
+          Write-Output "keyPassword=$env:KEY_PASSWORD" >> ./android/key.properties
+
+      - name: 构建 AAB
+        shell: pwsh
+        if: steps.restore-keystore.conclusion == 'success'
+        run: |-
+          flutter build appbundle `
+            --no-pub `
+            --build-name=${{ steps.gitversion.outputs.majorMinorPatch }} `
+            --build-number=${{ steps.gitversion.outputs.buildMetaData }}
+
+      - name: 构建 APK
+        shell: pwsh
+        if: steps.restore-keystore.conclusion == 'success'
+        run: |-
+          flutter build apk `
+            --no-pub `
+            --build-name=${{ steps.gitversion.outputs.majorMinorPatch }} `
+            --build-number=${{ steps.gitversion.outputs.buildMetaData }}
+
+      - name: 上传产物
+        id: android-artifact
+        if: steps.restore-keystore.conclusion == 'success'
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-package
+          path: |-
+            build/app/outputs/bundle/release/app-release.aab
+            build/app/outputs/flutter-apk/*.apk
+          compression-level: 9
+
+      - name: 生成校验和
+        shell: pwsh
+        run: |-
+          Write-Output '### Build Success :rocket:' >> $env:GITHUB_STEP_SUMMARY
+          Write-Output '|File|SHA256|' >> $env:GITHUB_STEP_SUMMARY
+          Write-Output '|:-|:-:|' >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|[android-package](${{ steps.android-artifact.outputs.artifact-url }})|${{ steps.android-artifact.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY
+
+  publish:
+    needs: build
+    name: 发布
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+      discussions: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: 签出仓库
+        uses: actions/checkout@v6
+
+      - name: Download a Msix Artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: android-package
+          path: artifacts
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
