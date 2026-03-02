@@ -67,7 +67,7 @@ jobs:
       - name: 还原证书
         id: restore-cert
         shell: pwsh
-        if: env.CERTIFICATE != ''
+        if: env.CERTIFICATE != '' && !github.event.pull_request
         env:
           CERTIFICATE: ${{ secrets.CERTIFICATE }}
           CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
