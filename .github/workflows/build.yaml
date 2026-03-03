@@ -300,37 +300,37 @@ jobs:
           $Private:Tmp = '${{ needs.build_windows.outputs.windows-amd64-loose }}'
           if ($Private:Tmp) {
             $Private:Json = ConvertFrom-Json $Private:Tmp
-            Write-Output "|[pixez.windows-amd64.zip]($($Private:Json.artifact-url))|$($Private:Json.artifact-digest)|" >> summary.md
+            Write-Output "|[pixez.windows-amd64.zip]($($Private:Json.'artifact-url'))|$($Private:Json.'artifact-digest')|" >> summary.md
           }
 
           $Private:Tmp = '${{ needs.build_windows.outputs.windows-amd64-msix }}'
           if ($Private:Tmp) {
             $Private:Json = ConvertFrom-Json $Private:Tmp
-            Write-Output "|[pixez.windows-amd64.msix]($($Private:Json.artifact-url))|$($Private:Json.artifact-digest)|" >> summary.md
+            Write-Output "|[pixez.windows-amd64.msix]($($Private:Json.'artifact-url'))|$($Private:Json.'artifact-digest')|" >> summary.md
           }
 
           $Private:Tmp = '${{ needs.build_windows.outputs.windows-amd64-msix-wrapper }}'
           if ($Private:Tmp) {
             $Private:Json = ConvertFrom-Json $Private:Tmp
-            Write-Output "|[pixez.windows-amd64.msix.exe]($($Private:Json.artifact-url))|$($Private:Json.artifact-digest)|" >> summary.md
+            Write-Output "|[pixez.windows-amd64.msix.exe]($($Private:Json.'artifact-url'))|$($Private:Json.'artifact-digest')|" >> summary.md
           }
 
           $Private:Tmp = '${{ needs.build_android.outputs.android-aab }}'
           if ($Private:Tmp) {
             $Private:Json = ConvertFrom-Json $Private:Tmp
-            Write-Output "|[pixez.android.aab]($($Private:Json.artifact-url))|$($Private:Json.artifact-digest)|" >> summary.md
+            Write-Output "|[pixez.android.aab]($($Private:Json.'artifact-url'))|$($Private:Json.'artifact-digest')|" >> summary.md
           }
 
           $Private:Tmp = '${{ needs.build_android.outputs.android-apk }}'
           if ($Private:Tmp) {
             $Private:Json = ConvertFrom-Json $Private:Tmp
-            Write-Output "|[pixez.android.apk]($($Private:Json.artifact-url))|$($Private:Json.artifact-digest)|" >> summary.md
+            Write-Output "|[pixez.android.apk]($($Private:Json.'artifact-url'))|$($Private:Json.'artifact-digest')|" >> summary.md
           }
 
           $Private:Tmp = '${{ needs.build_ios.outputs.ios-ipa }}'
           if ($Private:Tmp) {
             $Private:Json = ConvertFrom-Json $Private:Tmp
-            Write-Output "|[pixez.ios.ipa]($($Private:Json.artifact-url))|$($Private:Json.artifact-digest)|" >> summary.md
+            Write-Output "|[pixez.ios.ipa]($($Private:Json.'artifact-url'))|$($Private:Json.'artifact-digest')|" >> summary.md
           }
 
       - name: 展示 Summary
