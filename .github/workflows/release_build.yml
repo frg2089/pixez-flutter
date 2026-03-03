@@ -9,7 +9,7 @@ on:
 
 jobs:
   publish:
-    if: startsWith(github.ref, 'refs/tags/') && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    if: startsWith(github.ref, 'refs/tags/') && github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success'
     name: 发布
     permissions:
       contents: write
