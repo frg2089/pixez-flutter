@@ -377,4 +377,13 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          body: |-
+            <details>
+              <summary>
+                <h3>MSIX 安装教程</h3>
+              </summary>
+
+              <img src="https://github.com/Notsfsssf/pixez-flutter/assets/42184238/f1956682-f527-487d-997b-523319cd78d3" alt="MSIX 安装教程" />
+            </details>
+          append_body: true
           files: ./*
