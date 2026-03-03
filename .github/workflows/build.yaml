@@ -347,7 +347,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh pr comment ${{ github.event.pull_request.number }} --body-file summary.md
+        run: |-
+          gh pr comment ${{ github.event.pull_request.number }} `
+            --body-file summary.md `
+            --edit-last `
+            --create-if-none
 
   publish_release:
     name: Publish to Release
