@@ -1,0 +1,92 @@
+name: Release Artifacts
+on:
+  workflow_run:
+    workflows: 
+      - Build Windows
+      - Build Android
+    types: 
+      - completed
+
+jobs:
+  publish:
+    if: startsWith(github.ref, 'refs/tags/') && github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    name: 发布
+    permissions:
+      contents: write
+      discussions: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        id: download
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const run_id = ${{github.event.workflow_run.id}};
+            const pull_head_sha = '${{github.event.workflow_run.head_sha}}';
+            const pull_user_id = ${{github.event.sender.id}};
+
+            // 查找 Pull Request
+            const issue_number = await (async () => {
+              const pulls = await github.rest.pulls.list({owner, repo});
+              for await (const {data} of github.paginate.iterator(pulls)) {
+                for (const pull of data) {
+                  if (pull.head.sha === pull_head_sha && pull.user.id === pull_user_id) {
+                    return pull.number;
+                  }
+                }
+              }
+            })();
+            if (issue_number) {
+              core.info(`Using pull request ${issue_number}`);
+            } else {
+              return core.error(`No matching pull request found`);
+            }
+
+            // 获取 workflow run 的构建产物
+            const {data: {artifacts}} = await github.rest.actions.listWorkflowRunArtifacts({owner, repo, run_id});
+            if (!artifacts.length) {
+              return core.error(`No artifacts found`);
+            }
+
+            const fs = require('fs');
+            const {execSync} = require('child_process');
+
+            // 下载并解压所有构建产物
+            execSync('mkdir -p artifacts release');
+            
+            for (const art of artifacts) {
+              core.info(`Downloading artifact: ${art.name}`);
+              const {data: buffer} = await github.rest.actions.downloadArtifact({
+                owner,
+                repo,
+                artifact_id: art.id,
+                archive_format: 'zip'
+              });
+              const artifactPath = `artifacts/${art.name}.zip`;
+              fs.writeFileSync(artifactPath, Buffer.from(buffer));
+              
+              if (art.name === 'windows-amd64') {
+                // 保持 zip 文件，移动到 release 目录
+                execSync(`mv "${artifactPath}" release/`);
+              } else {
+                // 解压到 artifacts 文件夹
+                execSync(`unzip -q "${artifactPath}" -d artifacts/`);
+                execSync(`rm "${artifactPath}"`);
+                
+                // 将解压后的文件移动到 release 目录
+                const files = execSync(`find artifacts -type f`).toString().trim().split('\n');
+                for (const file of files) {
+                  const fileName = file.split('/').pop();
+                  execSync(`mv "${file}" release/`);
+                }
+              }
+            }
+            
+            // 清理空的 artifacts 目录
+            execSync('rm -rf artifacts');
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*

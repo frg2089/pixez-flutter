@@ -79,6 +79,15 @@ jobs:
             --build-name=${{ steps.gitversion.outputs.majorMinorPatch }} `
             --build-number=${{ steps.gitversion.outputs.buildMetaData }}
 
+      - name: 上传产物
+        id: android-aab
+        if: steps.restore-keystore.conclusion == 'success'
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          compression-level: 9
+
       - name: 构建 APK
         shell: pwsh
         if: steps.restore-keystore.conclusion == 'success'
@@ -89,43 +98,20 @@ jobs:
             --build-number=${{ steps.gitversion.outputs.buildMetaData }}
 
       - name: 上传产物
-        id: android-artifact
+        id: android-apk
         if: steps.restore-keystore.conclusion == 'success'
         uses: actions/upload-artifact@v6
         with:
-          name: android-package
-          path: |-
-            build/app/outputs/bundle/release/app-release.aab
-            build/app/outputs/flutter-apk/*.apk
+          name: android-apk
+          path: build/app/outputs/flutter-apk/*.apk
           compression-level: 9
 
       - name: 生成校验和
         shell: pwsh
+        if: steps.restore-keystore.conclusion == 'success'
         run: |-
           Write-Output '### Build Success :rocket:' >> $env:GITHUB_STEP_SUMMARY
           Write-Output '|File|SHA256|' >> $env:GITHUB_STEP_SUMMARY
           Write-Output '|:-|:-:|' >> $env:GITHUB_STEP_SUMMARY
-          Write-Output "|[android-package](${{ steps.android-artifact.outputs.artifact-url }})|${{ steps.android-artifact.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY
-
-  publish:
-    needs: build
-    name: 发布
-    if: startsWith(github.ref, 'refs/tags/')
-    permissions:
-      contents: write
-      discussions: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: 签出仓库
-        uses: actions/checkout@v6
-
-      - name: Download a Msix Artifact
-        uses: actions/download-artifact@v7
-        with:
-          name: android-package
-          path: artifacts
-
-      - name: Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/*
+          Write-Output "|[android-aab](${{ steps.android-aab.outputs.artifact-url }})|${{ steps.android-aab.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY
+          Write-Output "|[android-apk](${{ steps.android-apk.outputs.artifact-url }})|${{ steps.android-apk.outputs.artifact-digest }}|" >> $env:GITHUB_STEP_SUMMARY
