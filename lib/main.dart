@@ -75,7 +75,7 @@ main(List<String> args) async {
     final dbPath = await getApplicationSupportDirectory();
     await Paths.setApplicationSupportDirectory(dbPath.path);
     if (Platform.isWindows) {
-      Win32.migrationAppData();
+      await Win32.migrationAppData();
     }
     databaseFactory.setDatabasesPath(dbPath.path);
 
